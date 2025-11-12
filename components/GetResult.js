@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import { FaSearch, FaPrint, FaSpinner } from "react-icons/fa";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import { FaHome, FaPrint, FaSpinner } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function GetResult({ rollNo, token }) {
   const [loading, setLoading] = useState(false);
   const iframeRef = useRef(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (rollNo) fetchResult();
@@ -45,7 +47,6 @@ export default function GetResult({ rollNo, token }) {
         doc.write(cleanedHTML);
         doc.close();
 
-        // Ensure the content retains default AKTU layout before applying enhancements
         const initInteractive = () => {
           // Disable all links
           doc.querySelectorAll("a").forEach((link) => {
@@ -54,36 +55,24 @@ export default function GetResult({ rollNo, token }) {
             link.style.color = "gray";
           });
 
-          // ✅ Accordion behavior: toggle result sections
+          // ✅ Accordion logic — tables stay open until user closes them
           const headers = doc.querySelectorAll(".headerclass");
           headers.forEach((header) => {
             header.style.cursor = "pointer";
             header.addEventListener("click", () => {
               const id = header.id;
-              const target = doc.querySelector(
-                `.contentclass[id='${id}']`
-              );
+              const target = doc.querySelector(`.contentclass[id='${id}']`);
 
               if (target) {
                 const isHidden =
                   target.style.display === "none" || !target.style.display;
-
-                // Collapse others
-                doc.querySelectorAll(".contentclass").forEach((c) => {
-                  c.style.display = "none";
-                });
-                doc.querySelectorAll(".headerclass").forEach((h) => {
-                  h.style.backgroundColor = "";
-                });
-
-                // Toggle selected
                 target.style.display = isHidden ? "block" : "none";
                 header.style.backgroundColor = isHidden ? "#fff9db" : "";
               }
             });
           });
 
-          // 💅 Add responsive enhancements but do not override AKTU styles
+          // 💅 Responsive fixes
           const style = doc.createElement("style");
           style.textContent = `
             html, body {
@@ -153,46 +142,45 @@ export default function GetResult({ rollNo, token }) {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-slate-800/60 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-lg p-6 mt-10 text-center">
-      <ToastContainer position="bottom-right" />
-      <h1 className="text-3xl font-semibold text-white mb-6">
-        🎓 AKTU Result Viewer
-      </h1>
+    <div className="w-full pt-10  text-center">
+      {/* 🏠 Home button */}
+      <button
+        onClick={() => router.push("/")}
+        className="fixed top-3 left-3 flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-800 transition-colors font-medium text-white"
+      >
+        <FaHome /> Home
+      </button>
 
-      <div className="flex flex-wrap items-center justify-center gap-3 mb-5">
-        <button
-          onClick={fetchResult}
-          disabled={loading}
-          className="flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-medium text-white disabled:opacity-60"
-        >
-          {loading ? (
-            <>
-              <FaSpinner className="animate-spin" /> Loading...
-            </>
-          ) : (
-            <>
-              <FaSearch /> Fetch Result
-            </>
-          )}
-        </button>
+      {/* 🖨️ Print button */}
+      <button
+        onClick={handlePrint}
+        disabled={loading}
+        className="fixed top-3 left-28 flex items-center gap-2 px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 transition-colors font-medium text-white disabled:opacity-60"
+      >
+        <FaPrint /> Print Result
+      </button>
 
-        <button
-          onClick={handlePrint}
-          disabled={loading}
-          className="flex items-center gap-2 px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 transition-colors font-medium text-white disabled:opacity-60"
-        >
-          <FaPrint /> Print Result
-        </button>
-      </div>
+      {/* 🔁 Generate another result */}
+      <button
+        onClick={fetchResult}
+        disabled={loading}
+        className="fixed top-3 right-3 flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-medium text-white disabled:opacity-60"
+      >
+        {loading ? (
+          <>
+            <FaSpinner className="animate-spin" /> Loading...
+          </>
+        ) : (
+          "Generate Another Result"
+        )}
+      </button>
 
-      <div className="border border-slate-700 rounded-lg overflow-hidden bg-white shadow-inner">
-        <iframe
+         <iframe
           ref={iframeRef}
           title="Result Viewer"
-          className="w-full min-h-[700px]"
+          className="w-screen  bg-white min-h-[700px]"
           style={{ border: "none" }}
-        />
-      </div>
+        /> 
     </div>
   );
 }

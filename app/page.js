@@ -1,59 +1,86 @@
 "use client";
-import { useState } from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation"; // ✅ for navigation
+import { Search } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
-export default function Home() {
+const LogoSeal = () => (
+  <div className="w-20 h-20 mx-auto rounded-full bg-white shadow-inner flex items-center justify-center overflow-hidden">
+    <img
+      src="https://erp.aktu.ac.in/Images/Site/FileHandler-new.png"
+      alt="University Logo Placeholder"
+      className="w-full h-full object-cover"
+    />
+  </div>
+);
+
+const App = () => {
   const [rollNo, setRollNo] = useState("");
+  const router = useRouter(); // ✅ initialize router
+
+  const primaryColor = "bg-highlight";
+  const primaryHoverColor = "hover:bg-[#6e0000]";
+
+  // ✅ Navigate when button clicked
+  const handleCheckResult = () => {
+    if (rollNo.trim()) {
+      router.push(`/result?rollNo=${rollNo.trim()}`);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-800">
-      <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md text-center">
-        <div className="flex justify-center mb-6">
-          <Image
-            src="/logo.png" // replace with your logo path
-            alt="University Logo"
-            width={80}
-            height={80}
-            className="rounded-full"
-          />
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url('https://erp.aktu.ac.in/Images/Site/bg-01.jpg')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-900 to-pink-900 opacity-50 bg-blend-color-burn"></div>
+
+      <div className="relative bg-white py-14 px-10 w-full max-w-xs sm:max-w-sm mx-auto text-center">
+        <div className="mb-6">
+          <LogoSeal />
         </div>
 
-        <h1 className="text-2xl font-semibold mb-2 text-indigo-700">
-          AKTU Result Portal
-        </h1>
-        <p className="text-gray-500 mb-6">Enter your roll number to view your result</p>
+        <h1 className="text-3xl text-highlight mb-8">एकेटीयू वनव्यू</h1>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <input
-            type="text"
+            type="number"
             value={rollNo}
             onChange={(e) => setRollNo(e.target.value)}
-            placeholder="Enter Roll Number"
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            placeholder="अनुक्रमांक"
+            className="w-full px-4 py-3 border border-gray-300 text-highlight focus:outline-none transition duration-150"
+            style={{ fontFamily: "Inter, Arial, sans-serif" }}
           />
 
-          {rollNo.trim() ? (
-            <Link
-              href={`/result?rollNo=${encodeURIComponent(rollNo.trim())}`}
-              className="block w-full bg-indigo-600 text-white py-3 rounded-xl font-medium hover:bg-indigo-700 transition text-center"
-            >
-              Check Result
-            </Link>
-          ) : (
-            <button
-              disabled
-              className="block w-full bg-gray-300 text-gray-600 py-3 rounded-xl font-medium cursor-not-allowed"
-            >
-              Enter Roll Number
-            </button>
-          )}
+          {/* ✅ Button now uses onClick navigation instead of Link */}
+          <button
+            onClick={handleCheckResult}
+            disabled={!rollNo.trim()}
+            className={`flex items-center justify-center mx-auto px-10 py-3 font-medium text-white transition duration-200 shadow-md transform hover:scale-[1.01] ${
+              rollNo.trim()
+                ? `${primaryColor} ${primaryHoverColor} cursor-pointer`
+                : "bg-gray-400 cursor-not-allowed"
+            }`}
+          >
+            आगे बढ़ें
+          </button>
         </div>
 
-        <p className="text-sm text-gray-400 mt-6">
-          © {new Date().getFullYear()} AKTU Result Checker
+        <p
+          className="text-xs text-gray-500 mt-6 leading-relaxed"
+          style={{ fontFamily: "Inter, Arial, sans-serif" }}
+        >
+          यह यू.पी. के विस्तृत आवश्यक नियमों/कानूनों/विनियमावली तथा मानकों की
+          अभिव्यक्ति हेतु मात्र है।
         </p>
       </div>
     </div>
   );
-}
+};
+
+export default App;
