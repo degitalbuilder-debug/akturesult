@@ -10,7 +10,7 @@ export default async function ResultPage({ searchParams }) {
   const token = genToken(secretKey);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 ">
       {rollNo ? (
         <GetResult rollNo={rollNo} token={token} />
       ) : (
