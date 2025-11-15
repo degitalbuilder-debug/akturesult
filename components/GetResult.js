@@ -8,17 +8,21 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function GetResult({ rollNo, token }) {
   const [loading, setLoading] = useState(false);
+  // State for dynamic height calculation
+  const [iframeHeight, setIframeHeight] = useState('900px'); 
   const iframeRef = useRef(null);
   const router = useRouter();
 
   useEffect(() => {
-    if (rollNo) fetchResult();
+    if (rollNo && rollNo.trim()) fetchResult();
   }, [rollNo]);
 
   async function fetchResult() {
     if (!rollNo?.trim()) return toast.error("⚠ Missing roll number");
 
     setLoading(true);
+    setIframeHeight('900px'); 
+
     try {
       const res = await fetch("https://shhapi.vercel.app/api/result", {
         method: "POST",
@@ -30,12 +34,14 @@ export default function GetResult({ rollNo, token }) {
         cache: "no-store",
       });
 
-      if (!res.ok) throw new Error("Failed to fetch result");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to fetch result");
+      }
 
       const { result: html } = await res.json();
 
       if (html && iframeRef.current) {
-        // 🧹 Clean scripts for safety but keep inline styles
         const cleanedHTML = html.replace(
           /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
           ""
@@ -43,9 +49,20 @@ export default function GetResult({ rollNo, token }) {
 
         const iframe = iframeRef.current;
         const doc = iframe.contentDocument || iframe.contentWindow.document;
+
         doc.open();
-        doc.write(cleanedHTML);
+        doc.write(`<div class="result-wrapper">${cleanedHTML}</div>`);
         doc.close();
+
+        // Function to dynamically measure content height and update state
+        const adjustIframeHeight = () => {
+          const body = doc.body;
+          if (body) {
+            // Use scrollHeight for accurate content height + buffer
+            const contentHeight = body.scrollHeight + 40; 
+            setIframeHeight(`${contentHeight}px`);
+          }
+        };
 
         const initInteractive = () => {
           // Disable all links
@@ -55,7 +72,7 @@ export default function GetResult({ rollNo, token }) {
             link.style.color = "gray";
           });
 
-          // ✅ Accordion logic — tables stay open until user closes them
+          // Accordion logic for toggling tables
           const headers = doc.querySelectorAll(".headerclass");
           headers.forEach((header) => {
             header.style.cursor = "pointer";
@@ -67,54 +84,96 @@ export default function GetResult({ rollNo, token }) {
                 const isHidden =
                   target.style.display === "none" || !target.style.display;
                 target.style.display = isHidden ? "block" : "none";
-                header.style.backgroundColor = isHidden ? "#fff9db" : "";
+                header.style.backgroundColor = isHidden ? "#fff9db" : ""; 
               }
+              
+              // Recalculate height after the content is toggled
+              setTimeout(adjustIframeHeight, 50);
             });
           });
 
-          // 💅 Responsive fixes
+          // Responsive and Aesthetic styles injection
           const style = doc.createElement("style");
           style.textContent = `
+            /* CRITICAL FIXES: Force all elements to respect 100% width */
+            *, *::before, *::after {
+                max-width: 100% !important;
+                box-sizing: border-box;
+            }
+
             html, body {
-              width: 100%;
-              overflow-x: hidden;
+              width: 100%; 
+              overflow-x: hidden; 
+              font-family: Arial, sans-serif;
+              padding: 0;
+              margin: 0;
+            }
+            .result-wrapper {
+                padding: 15px;
             }
             img {
               max-width: 100%;
               height: auto;
             }
-            .table-responsive {
-              width: 100%;
-              overflow-x: auto;
-              -webkit-overflow-scrolling: touch;
+            
+            /* 🔥🔥🔥 CORE TABLE WIDTH FIXES 🔥🔥🔥 */
+            table {
+                width: 100% !important; 
+                max-width: 100%;
+                /* Use display: table to ensure cells calculate widths properly */
+                display: table; 
+                border-collapse: collapse;
+                margin-bottom: 1rem;
             }
+            
+            /* Force internal table structure elements to 100% width of their container, 
+               and maintain correct table display properties */
+            tbody, thead, tfoot {
+                width: 100% !important; 
+                display: table-row-group !important;
+            }
+
+            tr {
+                width: 100% !important;
+                display: table-row !important;
+            }
+            
+            /* Allow cells to split the width, but ensure they don't have fixed legacy widths */
+            td, th {
+                width: auto !important; 
+                display: table-cell !important;
+                white-space: normal;
+                padding: 8px;
+                /* If the user still sees horizontal scroll, uncomment the overflow line below, 
+                   but it can make text unreadable on wide cells. */
+                /* overflow-x: hidden; */ 
+            }
+            /* End CORE TABLE WIDTH FIXES */
+
             .headerclass {
               transition: background 0.3s ease;
               border-radius: 6px;
+              padding: 10px;
+              font-weight: bold;
+              background-color: #f0f0f0; 
             }
             .headerclass:hover {
-              background-color: #f9f9f9;
+              background-color: #e0e0e0;
+            }
+            .contentclass {
+                padding: 10px;
+                border: 1px solid #eee;
+                border-top: none;
+                margin-bottom: 10px;
             }
             @media (max-width: 768px) {
-              body {
-                padding: 8px;
-              }
-              table {
-                width: 100% !important;
-                font-size: 11px !important;
-              }
-              td, th {
-                padding: 4px !important;
-                display: block;
-                width: 100%;
-              }
-              .headerclass, .contentclass {
-                margin-bottom: 10px;
-              }
+              /* Mobile styles */
             }
           `;
           doc.head.appendChild(style);
 
+          // Final height adjustment
+          adjustIframeHeight();
           toast.success("✅ Result loaded successfully!");
         };
 
@@ -122,65 +181,85 @@ export default function GetResult({ rollNo, token }) {
           initInteractive();
         } else {
           doc.addEventListener("DOMContentLoaded", initInteractive);
+          window.addEventListener("load", initInteractive);
         }
       } else {
         toast.error("No HTML returned from server");
       }
     } catch (err) {
       console.error("❌ Error fetching result:", err);
-      toast.error("Failed to load result");
+      toast.error(`Failed to load result: ${err.message}`);
     } finally {
       setLoading(false);
     }
   }
 
   function handlePrint() {
-    if (!iframeRef.current) return toast.warn("⚠ Nothing to print!");
+    if (!iframeRef.current || loading)
+      return toast.warn("⚠ Result not ready or currently loading!");
     const iframeWindow = iframeRef.current.contentWindow;
     iframeWindow.focus();
     iframeWindow.print();
   }
 
   return (
-    <div className="w-full pt-10  text-center">
-      {/* 🏠 Home button */}
-      <button
-        onClick={() => router.push("/")}
-        className="fixed top-3 left-3 flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-800 transition-colors font-medium text-white"
-      >
-        <FaHome /> Home
-      </button>
+    <div className="min-h-screen w-full bg-gray-50 p-4">
+      <div className="max-w-6xl mx-auto"> 
+        
+        {/* Header/Action Bar */}
+        <header className="flex flex-col sm:flex-row justify-between items-center mb-6 p-4 bg-white rounded-xl shadow-lg border border-gray-100">
+          <h1 className="text-xl font-bold text-gray-800 mb-3 sm:mb-0">
+            Result for Roll No: <span className="text-indigo-600">{rollNo}</span>
+          </h1>
 
-      {/* 🖨️ Print button */}
-      <button
-        onClick={handlePrint}
-        disabled={loading}
-        className="fixed top-3 left-28 flex items-center gap-2 px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 transition-colors font-medium text-white disabled:opacity-60"
-      >
-        <FaPrint /> Print Result
-      </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push("/")}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-800 transition-colors font-medium text-white shadow-md text-sm"
+            >
+              <FaHome /> New Search
+            </button>
 
-      {/* 🔁 Generate another result */}
-      <button
-        onClick={fetchResult}
-        disabled={loading}
-        className="fixed top-3 right-3 flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-medium text-white disabled:opacity-60"
-      >
-        {loading ? (
-          <>
-            <FaSpinner className="animate-spin" /> Loading...
-          </>
-        ) : (
-          "Generate Another Result"
-        )}
-      </button>
+            <button
+              onClick={handlePrint}
+              disabled={loading}
+              className="flex items-center gap-2 px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 transition-colors font-medium text-white disabled:opacity-60 shadow-md text-sm"
+            >
+              {loading ? (
+                <FaSpinner className="animate-spin" />
+              ) : (
+                <FaPrint />
+              )}{" "}
+              Print Result
+            </button>
+          </div>
+        </header>
 
-         <iframe
-          ref={iframeRef}
-          title="Result Viewer"
-          className="w-screen  bg-white min-h-[700px]"
-          style={{ border: "none" }}
-        /> 
+        {/* Result Viewer Container */}
+        <div className="relative bg-white p-2 sm:p-6 border border-gray-200 rounded-xl shadow-2xl">
+          {loading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 z-20 transition-opacity duration-300">
+              <FaSpinner className="animate-spin text-indigo-600 text-5xl" />
+              <p className="mt-4 text-xl font-semibold text-indigo-600">
+                Fetching Your Result...
+              </p>
+            </div>
+          )}
+
+          {/* Iframe: w-full and dynamic height from state */}
+          <iframe
+            ref={iframeRef}
+            title={`Result for Roll No ${rollNo}`}
+            className="w-full bg-white"
+            style={{
+              border: "none",
+              height: iframeHeight,
+              opacity: loading ? 0.5 : 1, 
+              transition: "opacity 0.3s ease, height 0.3s ease",
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }

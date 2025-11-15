@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation"; // ✅ for navigation
 import { Search } from "lucide-react";
 import Link from "next/link";
-
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 const LogoSeal = () => (
   <div className="w-20 h-20 mx-auto rounded-full bg-white shadow-inner flex items-center justify-center overflow-hidden">
     <img
@@ -17,16 +17,11 @@ const LogoSeal = () => (
 const App = () => {
   const [rollNo, setRollNo] = useState("");
   const router = useRouter(); // ✅ initialize router
-
+const [loading,setLoading]=useState(false);
   const primaryColor = "bg-highlight";
   const primaryHoverColor = "hover:bg-[#6e0000]";
 
-  // ✅ Navigate when button clicked
-  const handleCheckResult = () => {
-    if (rollNo.trim()) {
-      router.push(`/result?rollNo=${rollNo.trim()}`);
-    }
-  };
+ 
 
   return (
     <div
@@ -58,17 +53,24 @@ const App = () => {
           />
 
           {/* ✅ Button now uses onClick navigation instead of Link */}
-          <button
-            onClick={handleCheckResult}
-            disabled={!rollNo.trim()}
-            className={`flex items-center justify-center mx-auto px-10 py-3 font-medium text-white transition duration-200 shadow-md transform hover:scale-[1.01] ${
-              rollNo.trim()
-                ? `${primaryColor} ${primaryHoverColor} cursor-pointer`
-                : "bg-gray-400 cursor-not-allowed"
-            }`}
-          >
-            आगे बढ़ें
-          </button>
+          <Link
+  href={
+    rollNo.trim()
+      ? `/result?rollNo=${rollNo.trim()}`
+      : "#"
+  }
+  onClick={(e) => {
+    if (!rollNo.trim()) e.preventDefault();
+  }}
+  className={`flex items-center justify-center mx-auto px-10 py-3 font-medium text-white transition duration-200 shadow-md transform hover:scale-[1.01] ${
+    rollNo.trim()
+      ? `${primaryColor} ${primaryHoverColor} cursor-pointer`
+      : "bg-gray-400 cursor-not-allowed"
+  }`}
+>
+  आगे बढ़ें
+</Link>
+
         </div>
 
         <p
