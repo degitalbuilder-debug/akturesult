@@ -180,11 +180,17 @@ function handlePrint() {
       {/* Result Viewer */}
       <div className="relative bg-white border border-gray-200 rounded-xl p-5 overflow-x-auto">
         {loading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 z-20 transition-opacity duration-300">
-            <FaSpinner className="animate-spin text-indigo-600 text-5xl" />
-            <p className="mt-4 text-xl font-semibold text-indigo-600">Fetching Your Result...</p>
-          </div>
-        )}
+  <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 z-50 backdrop-blur-sm transition-opacity duration-300">
+    <div className="flex flex-col items-center gap-4 p-6 bg-white rounded-xl shadow-xl border border-gray-200">
+      <FaSpinner className="animate-spin text-indigo-600 text-6xl" />
+      <p className="text-lg sm:text-xl font-semibold text-gray-700">
+        Fetching Your Result...
+      </p>
+      <p className="text-sm text-gray-500">Please wait while we load your data.</p>
+    </div>
+  </div>
+)}
+
 
         {bodyContent && (
           <div
