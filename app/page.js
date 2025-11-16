@@ -1,27 +1,26 @@
 "use client";
+
 import React, { useState } from "react";
-import { useRouter } from "next/navigation"; // ✅ for navigation
-import { Search } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
-const LogoSeal = () => (
-  <div className="w-20 h-20 mx-auto rounded-full bg-white shadow-inner flex items-center justify-center overflow-hidden">
-    <img
-      src="https://erp.aktu.ac.in/Images/Site/FileHandler-new.png"
-      alt="University Logo Placeholder"
-      className="w-full h-full object-cover"
-    />
-  </div>
-);
+
+
 
 const App = () => {
   const [rollNo, setRollNo] = useState("");
-  const router = useRouter(); // ✅ initialize router
-const [loading,setLoading]=useState(false);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
   const primaryColor = "bg-highlight";
   const primaryHoverColor = "hover:bg-[#6e0000]";
 
- 
+  const handleNavigate = async () => {
+    if (!rollNo.trim()) return;
+
+    setLoading(true);
+    // Simulate small delay if needed
+    router.push(`/result?rollNo=${rollNo.trim()}`);
+  };
 
   return (
     <div
@@ -33,11 +32,17 @@ const [loading,setLoading]=useState(false);
         backgroundAttachment: "fixed",
       }}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-900 to-pink-900 opacity-50 bg-blend-color-burn"></div>
+      <div className="fixed top-0 left-0 w-full h-full inset-0 bg-gradient-to-r from-blue-900 to-pink-900 opacity-50 bg-blend-color-burn"></div>
 
       <div className="relative bg-white py-14 px-10 w-full max-w-xs sm:max-w-sm mx-auto text-center">
         <div className="mb-6">
-          <LogoSeal />
+          <div className="w-20 h-20 mx-auto rounded-full bg-white shadow-inner flex items-center justify-center overflow-hidden">
+            <img
+              src="https://erp.aktu.ac.in/Images/Site/FileHandler-new.png"
+              alt="University Logo Placeholder"
+              className="w-full h-full object-cover"
+            />
+          </div>
         </div>
 
         <h1 className="text-3xl text-highlight mb-8">एकेटीयू वनव्यू</h1>
@@ -52,33 +57,29 @@ const [loading,setLoading]=useState(false);
             style={{ fontFamily: "Inter, Arial, sans-serif" }}
           />
 
-          {/* ✅ Button now uses onClick navigation instead of Link */}
-          <Link
-  href={
-    rollNo.trim()
-      ? `/result?rollNo=${rollNo.trim()}`
-      : "#"
-  }
-  onClick={(e) => {
-    if (!rollNo.trim()) e.preventDefault();
-  }}
-  className={`flex items-center justify-center mx-auto px-10 py-3 font-medium text-white transition duration-200 shadow-md transform hover:scale-[1.01] ${
-    rollNo.trim()
-      ? `${primaryColor} ${primaryHoverColor} cursor-pointer`
-      : "bg-gray-400 cursor-not-allowed"
-  }`}
->
-  आगे बढ़ें
-</Link>
+          <button
+            onClick={handleNavigate}
+            disabled={!rollNo.trim() || loading}
+            className="flex items-center bg-highlight justify-center mx-auto px-10 py-3 font-medium text-white transition duration-200 shadow-md transform hover:scale-[1.01] ${rollNo.trim()
+                  cursor-pointer "             
+          >
 
+            {loading ? (
+             <>
+             Loading .. <AiOutlineLoading3Quarters className="animate-spin text-xl" />
+             </> 
+            ) : (
+              "आगे बढ़ें"
+            )}
+          </button>
         </div>
 
         <p
           className="text-xs text-gray-500 mt-6 leading-relaxed"
           style={{ fontFamily: "Inter, Arial, sans-serif" }}
         >
-          यह यू.पी. के विस्तृत आवश्यक नियमों/कानूनों/विनियमावली तथा मानकों की
-          अभिव्यक्ति हेतु मात्र है।
+          यह डॉ ए पी जे अब्दुल कलाम तकनीकी विश्वविद्यालय लखनऊ की आधिकारिक ईo आरo पीo है। <br/>
+          (एoकेoटीoयूo-एसडीसी द्वारा संचालित)
         </p>
       </div>
     </div>

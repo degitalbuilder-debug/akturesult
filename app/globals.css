@@ -30,3 +30,29 @@ body {
 
 
 
+.result-wrapper .contentclass {
+  display: none; /* initially hidden */
+  overflow-x: auto; /* horizontal scroll if table too wide */
+  width: 100%;
+}
+table {
+  width: 100% !important;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+td, th {
+  word-break: break-word;
+  white-space: normal;
+  padding: 8px;
+}
+.table-responsive:nth-of-type(3) table tr td tbody tr td div  {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+.container-fluid table td tr {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+.table-responsive:nth-of-type(2) th {
+background-color:#ADD8E6;
+}

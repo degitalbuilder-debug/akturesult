@@ -1,6 +1,8 @@
+ 
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,9 +22,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <head>
-
         {/* Canonical URL */}
         <link rel="canonical" href="https://aakturesult.netlify.app/" />
 
@@ -57,26 +58,23 @@ export default function RootLayout({ children }) {
         {/* Favicon */}
         <link rel="icon" href="/favicon.ico" />
 
-        {/* Google Tag Manager */}
-        <script>
+        {/* Google Tag Manager Script */}
+        <Script id="gtm-script" strategy="afterInteractive">
           {`
             (function(w,d,s,l,i){
               w[l]=w[l]||[];
               w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});
               var f=d.getElementsByTagName(s)[0],
-              j=d.createElement(s), dl=l!='dataLayer'?'&l='+l:'';
+                  j=d.createElement(s), dl=l!='dataLayer'?'&l='+l:'';
               j.async=true;
               j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
               f.parentNode.insertBefore(j,f);
             })(window,document,'script','dataLayer','GTM-MCM9XVSL');
           `}
-        </script>
-        {/* End GTM */}
-
+        </Script>
       </head>
 
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-
+      <body>
         {/* GTM NoScript */}
         <noscript>
           <iframe
@@ -86,7 +84,6 @@ export default function RootLayout({ children }) {
             style={{ display: "none", visibility: "hidden" }}
           ></iframe>
         </noscript>
-        {/* End GTM */}
 
         <ToastContainer
           position="top-right"
@@ -97,8 +94,9 @@ export default function RootLayout({ children }) {
           pauseOnHover
           theme="colored"
         />
-
-        {children}
+<main className="bg-black z-50">{children}
+  </main>
+        
       </body>
     </html>
   );
